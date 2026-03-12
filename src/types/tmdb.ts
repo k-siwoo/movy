@@ -41,3 +41,21 @@ export interface WatchProvidersResponse {
   id: number;
   results: Record<string, CountryProviders>;
 }
+
+export interface ReleaseDateItem {
+  certification: string;
+  iso_639_1: string | null;
+  note: string;
+  release_date: string;
+  type: number;
+}
+
+export interface ReleaseDateCountry {
+  iso_3166_1: string;
+  release_dates: ReleaseDateItem[];
+}
+
+export interface MovieReleaseDatesResponse {
+  id: number;
+  results: ReleaseDateCountry[];
+}

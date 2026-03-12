@@ -13,11 +13,16 @@ export interface DiscoverParams {
   sort_by: string;
   page: number;
   with_original_language?: string;
+  with_watch_providers?: string;
+  watch_region?: string;
+  region?: string;
+  with_release_type?: string;
   "vote_average.gte"?: number;
   "vote_count.gte"?: number;
   "with_runtime.gte"?: number;
   "with_runtime.lte"?: number;
   "primary_release_date.gte"?: string;
+  "primary_release_date.lte"?: string;
 }
 
 const scenarioPresets: Record<ScenarioKey, Partial<DiscoverParams>> = {
@@ -83,14 +88,14 @@ const scenarioPresets: Record<ScenarioKey, Partial<DiscoverParams>> = {
 };
 
 export const scenarioLabels: { key: ScenarioKey; label: string }[] = [
-  { key: "sad", label: "sad" },
-  { key: "dopamine", label: "dopamine" },
-  { key: "friends", label: "friends" },
-  { key: "family", label: "family" },
-  { key: "solo", label: "solo" },
-  { key: "rainy", label: "rainy" },
-  { key: "insomnia", label: "insomnia" },
-  { key: "postExam", label: "postExam" },
+  { key: "sad", label: "우울할 때" },
+  { key: "dopamine", label: "도파민" },
+  { key: "friends", label: "친구와 함께" },
+  { key: "family", label: "가족과 함께" },
+  { key: "solo", label: "혼자서" },
+  { key: "rainy", label: "비 오는 날" },
+  { key: "insomnia", label: "잠 안 올 때" },
+  { key: "postExam", label: "시험 끝난 후" },
 ];
 
 export interface DiscoverFilterInput {
@@ -98,9 +103,14 @@ export interface DiscoverFilterInput {
   scenario?: ScenarioKey;
   language?: string;
   adult?: boolean;
+  ott?: string[];
+  country?: string;
 }
 
-export function buildDiscoverParams(input: DiscoverFilterInput): DiscoverParams {
+// Discover 요청 파라미터 생성 함수
+export function buildDiscoverParams(
+  input: DiscoverFilterInput,
+): DiscoverParams {
   const base: DiscoverParams = {
     include_adult: false,
     sort_by: "popularity.desc",
@@ -115,6 +125,9 @@ export function buildDiscoverParams(input: DiscoverFilterInput): DiscoverParams 
     ...withScenario,
     include_adult: input.adult ?? withScenario.include_adult,
     with_original_language: input.language || undefined,
+    with_watch_providers: input.ott?.length ? input.ott.join("|") : undefined,
+    watch_region: input.ott?.length ? "KR" : undefined,
+    region: input.country || undefined,
     page: input.page,
   };
 }
