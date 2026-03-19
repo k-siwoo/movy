@@ -1,8 +1,9 @@
 import styled from "@emotion/styled";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { MovieGrid } from "../components/MovieGrid";
 import { useSearchMovies } from "../features/movie/queries";
+import { useAutoFillGrid } from "../hooks/useAutoFillGrid";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { useLibraryStore } from "../stores/libraryStore";
 
@@ -80,11 +81,6 @@ const LoadMoreButton = styled.button`
 
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const gridRef = useRef<HTMLDivElement | null>(null);
-  const [gridWidth, setGridWidth] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState(0);
-  const [gridTop, setGridTop] = useState(0);
-  const [estimatedRowHeight, setEstimatedRowHeight] = useState(380);
   const search = searchParams.get("q") || "";
   const debounced = useDebouncedValue(search, 300);
   const query = useSearchMovies(debounced);
@@ -99,74 +95,13 @@ export function SearchPage() {
     () => query.data?.pages.flatMap((page) => page.results) ?? [],
     [query.data],
   );
-  const minimumMoviesForViewport = useMemo(() => {
-    if (gridWidth <= 0) {
-      return 20;
-    }
-
-    const estimatedColumns = Math.max(1, Math.floor((gridWidth + 20) / 240));
-    const visibleHeight = Math.max(0, viewportHeight - gridTop - 24);
-    const estimatedRows = Math.max(1, Math.ceil(visibleHeight / estimatedRowHeight));
-
-    return estimatedColumns * estimatedRows;
-  }, [estimatedRowHeight, gridTop, gridWidth, viewportHeight]);
-
-  useEffect(() => {
-    const target = gridRef.current;
-
-    if (!target || movies.length === 0) {
-      return undefined;
-    }
-
-    const updateMetrics = () => {
-      setGridWidth(target.clientWidth);
-      setGridTop(target.getBoundingClientRect().top);
-      setViewportHeight(window.innerHeight);
-
-      const firstCard = target.querySelector("article");
-      if (firstCard instanceof HTMLElement) {
-        const styles = window.getComputedStyle(target.firstElementChild ?? target);
-        const rowGap = Number.parseFloat(styles.rowGap || styles.gap || "0");
-        setEstimatedRowHeight(firstCard.getBoundingClientRect().height + rowGap);
-      }
-    };
-
-    updateMetrics();
-
-    const observer = new ResizeObserver(() => {
-      updateMetrics();
-    });
-
-    observer.observe(target);
-    if (target.firstElementChild instanceof HTMLElement) {
-      observer.observe(target.firstElementChild);
-    }
-
-    window.addEventListener("resize", updateMetrics);
-    window.addEventListener("scroll", updateMetrics, { passive: true });
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", updateMetrics);
-      window.removeEventListener("scroll", updateMetrics);
-    };
-  }, [movies.length]);
-
-  useEffect(() => {
-    if (!debounced || movies.length === 0) {
-      return;
-    }
-
-    if (!query.hasNextPage || query.isFetchingNextPage || query.isLoading) {
-      return;
-    }
-
-    if (movies.length >= minimumMoviesForViewport) {
-      return;
-    }
-
-    void query.fetchNextPage();
-  }, [debounced, minimumMoviesForViewport, movies.length, query]);
+  const { gridRef } = useAutoFillGrid({
+    itemCount: movies.length,
+    hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
+    isLoading: query.isLoading,
+    onFetchNextPage: () => query.fetchNextPage(),
+  });
 
   return (
     <Page>
