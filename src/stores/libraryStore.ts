@@ -1,12 +1,9 @@
 import { create } from "zustand";
 import type { Movie } from "../types/tmdb";
 import {
-  clearFavorites,
-  clearHistory,
   getFavorites,
   getHistory,
   removeFavorite,
-  removeHistory,
   upsertFavorite,
   upsertHistory,
   type FavoriteMovie,
@@ -20,14 +17,11 @@ interface LibraryState {
   loadFavorites: () => Promise<void>;
   loadHistory: () => Promise<void>;
   toggleFavoriteFromMovie: (movie: Movie) => Promise<void>;
-  removeFavoriteById: (movieId: number) => Promise<void>;
-  clearAllFavorites: () => Promise<void>;
   upsertHistoryFromMovie: (movie: Movie) => Promise<void>;
-  removeHistoryById: (movieId: number) => Promise<void>;
-  clearAllHistory: () => Promise<void>;
   isFavorite: (movieId: number) => boolean;
 }
 
+// 영화 타입을 변환 함수
 function mapMovie(movie: Movie): StoredMovie {
   return {
     movieId: movie.id,
@@ -51,32 +45,19 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   },
   toggleFavoriteFromMovie: async (movie) => {
     const exists = get().favorites.some((item) => item.movieId === movie.id);
+
     if (exists) {
       await removeFavorite(movie.id);
     } else {
       await upsertFavorite(mapMovie(movie));
     }
-    await get().loadFavorites();
-  },
-  removeFavoriteById: async (movieId) => {
-    await removeFavorite(movieId);
-    await get().loadFavorites();
-  },
-  clearAllFavorites: async () => {
-    await clearFavorites();
+
     await get().loadFavorites();
   },
   upsertHistoryFromMovie: async (movie) => {
     await upsertHistory(mapMovie(movie));
     await get().loadHistory();
   },
-  removeHistoryById: async (movieId) => {
-    await removeHistory(movieId);
-    await get().loadHistory();
-  },
-  clearAllHistory: async () => {
-    await clearHistory();
-    await get().loadHistory();
-  },
-  isFavorite: (movieId) => get().favorites.some((item) => item.movieId === movieId),
+  isFavorite: (movieId) =>
+    get().favorites.some((item) => item.movieId === movieId),
 }));
