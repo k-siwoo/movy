@@ -65,13 +65,24 @@ const SelectWrap = styled.label`
 
 const Select = styled.select`
   height: 40px;
-  min-width: 96px;
+  min-width: 104px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
   padding: 0 12px;
   outline: none;
+  color-scheme: dark;
+
+  &:focus {
+    border-color: rgba(242, 191, 89, 0.45);
+    box-shadow: 0 0 0 3px rgba(242, 191, 89, 0.12);
+  }
+
+  option {
+    background: var(--panel);
+    color: var(--text);
+  }
 `;
 
 interface MovieFiltersProps {

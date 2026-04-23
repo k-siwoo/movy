@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import { Link } from "react-router-dom";
 
 const Hero = styled.section`
-  min-height: calc(100vh - 140px);
+  min-height: calc(100dvh - 148px);
   display: grid;
   place-items: center;
 `;
@@ -68,7 +68,7 @@ export function HomePage() {
         <Description>
           무드와 상황을 선택하면
           <br />
-          최적의 영화를 골라드립니다.
+          취향에 맞는 영화를 추천합니다.
         </Description>
         <Button to="/movie">추천 받기</Button>
       </HeroInner>
